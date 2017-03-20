@@ -74,7 +74,27 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
     {
         if(position == 0)
         {
-            Intent intent = new Intent(Categories.this, Categories.class);
+            Intent intent = new Intent(Categories.this, Info.class);
+            startActivity(intent);
+        }
+        if(position == 1)
+        {
+            Intent intent = new Intent(Categories.this, Dreams.class);
+            startActivity(intent);
+        }
+        if(position == 2)
+        {
+            Intent intent = new Intent(Categories.this, Plan.class);
+            startActivity(intent);
+        }
+        if(position == 3)
+        {
+            Intent intent = new Intent(Categories.this, Implementation.class);
+            startActivity(intent);
+        }
+        if(position == 4)
+        {
+            Intent intent = new Intent(Categories.this, Review.class);
             startActivity(intent);
         }
 
