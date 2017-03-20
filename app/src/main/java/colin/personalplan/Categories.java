@@ -2,6 +2,7 @@ package colin.personalplan;
 
 import android.app.Activity;
 import android.app.ListActivity;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
@@ -69,8 +70,13 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
 
 
     @Override
-    protected void onListItemClick(ListView list, View v, int position, long id) {
-
+    protected void onListItemClick(ListView list, View v, int position, long id)
+    {
+        if(position == 0)
+        {
+            Intent intent = new Intent(Categories.this, Categories.class);
+            startActivity(intent);
+        }
 
 
     }
