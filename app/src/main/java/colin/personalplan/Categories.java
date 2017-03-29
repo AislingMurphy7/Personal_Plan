@@ -55,7 +55,7 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
                         .show();
                 position = index;
                 tts = new TextToSpeech(Categories.this, Categories.this);
-                return false;
+                return true;
             }});
 
     }

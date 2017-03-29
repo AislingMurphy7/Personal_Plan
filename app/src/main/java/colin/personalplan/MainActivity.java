@@ -1,23 +1,26 @@
 package colin.personalplan;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
 
 /**
  * Created by Colin on 07/03/2017.
@@ -25,8 +28,9 @@ import java.util.Date;
 
 public class MainActivity extends AppCompatActivity
 {
-    static final int REQUEST_TAKE_PHOTO = 1;
     String mCurrentPhotoPath;
+    static final int REQUEST_IMAGE_CAPTURE = 1;
+    ImageView capture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -83,11 +87,7 @@ public class MainActivity extends AppCompatActivity
                     }
                 });
 
-        final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/picFolder/";
-        File newdir = new File(dir);
-        newdir.mkdirs();
-
-        ImageButton capture = (ImageButton) findViewById(R.id.camera);
+        capture = (ImageView) findViewById(R.id.camera);
         capture.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v)
@@ -96,7 +96,8 @@ public class MainActivity extends AppCompatActivity
                         .setTitle("Change picture")
                         .setMessage("Are you sure you want to change your profile picture?")
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
+                            public void onClick(DialogInterface dialog, int which)
+                            {
                                 dispatchTakePictureIntent();
                             }
                         })
@@ -111,50 +112,75 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        String photoPath = Environment.getExternalStorageDirectory()+"Android/data/colin.personalplan/files/Pictures/profile.jpg";
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Bitmap bitmap = BitmapFactory.decodeFile(photoPath, options);
+        String path = "/data/user/0/colin.personalplan/app_imageDir/";
+        String name = "profile.jpg";
+        try
+        {
+            File f = new File(path, name);
+            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+            capture.setImageBitmap(b);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
 
-        capture.setImageBitmap(bitmap);
+
+
+
     }
 
-    private void dispatchTakePictureIntent()
+    public void dispatchTakePictureIntent()
     {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        "com.example.android.fileprovider",
-                        photoFile);
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-            }
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+        }
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            Bitmap imageBitmap = (Bitmap) extras.get("data");
+            saveToInternalStorage(imageBitmap);
+            capture.setImageBitmap(imageBitmap);
         }
     }
 
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "profile";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
+    private String saveToInternalStorage(Bitmap bitmapImage)
+    {
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
 
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
+        //make the file name album + artwork, lowercase with no spaces.
+        String name = "profile.jpg";
+
+        File mypath = new File(directory,name);
+
+        FileOutputStream fos = null;
+        try
+        {
+            fos = new FileOutputStream(mypath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        }
+
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        finally
+        {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return directory.getAbsolutePath();
     }
 }

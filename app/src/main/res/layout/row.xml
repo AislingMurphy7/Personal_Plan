@@ -13,7 +13,8 @@
         android:id="@+id/icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/dreams"/>
+        android:scaleHeight="50%"
+        android:scaleWidth="50"/>
 
     <TextView
         android:id="@+id/category"
