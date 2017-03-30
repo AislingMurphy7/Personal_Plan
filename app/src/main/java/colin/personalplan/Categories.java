@@ -18,7 +18,7 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
     int position;
     String[] titles =
             {
-                    "My Information Gather",
+                    "Gather My Information",
                     "My Dreams",
                     "My Plan",
                     "Implementation",
