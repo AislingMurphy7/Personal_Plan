@@ -4,6 +4,51 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+
+
+    <HorizontalScrollView android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/toolbar">
+
+            <VideoView
+                android:layout_width="wrap_content"
+                android:clickable="true"
+                android:padding="10dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/video"
+                android:minHeight="300dp"
+                android:minWidth="300dp"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignTop="@+id/camera"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true" />
+
+            <ImageView
+                android:layout_width="385dp"
+                android:clickable="true"
+                android:paddingRight="25dp"
+                android:paddingLeft="25dp"
+                android:layout_height="525dp"
+                android:id="@+id/camera"
+                android:minHeight="300dp"
+                android:minWidth="300dp"
+                android:layout_alignParentBottom="true" />
+
+        </RelativeLayout>
+    </HorizontalScrollView>
+
     <android.support.v7.widget.Toolbar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -19,7 +64,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Swipe here to watch video"
+            android:text="Swipe to change picture"
             android:id="@+id/toolbar_title" />
 
 
@@ -29,7 +74,7 @@
         android:layout_width="45dp"
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/videocamera"
-        android:id="@+id/video"
+        android:id="@+id/videocamera"
         android:layout_alignParentTop="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
@@ -42,9 +87,9 @@
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/photocamera"
         android:id="@+id/photo"
-        android:layout_alignTop="@+id/video"
-        android:layout_toLeftOf="@+id/video"
-        android:layout_toStartOf="@+id/video"
+        android:layout_alignTop="@+id/videocamera"
+        android:layout_toLeftOf="@+id/videocamera"
+        android:layout_toStartOf="@+id/videocamera"
         android:layout_marginRight="18dp"
         android:layout_marginEnd="18dp" />
 
@@ -59,20 +104,5 @@
         android:layout_toStartOf="@+id/photo"
         android:layout_marginRight="13dp"
         android:layout_marginEnd="13dp" />
-    <ImageView
-        android:layout_width="wrap_content"
-        android:clickable="true"
-        android:padding="10dp"
-        android:layout_height="wrap_content"
-        android:id="@+id/camera"
-        android:minHeight="300dp"
-        android:minWidth="300dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@+id/toolbar" />
-
 
 </RelativeLayout>

@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
@@ -13,6 +14,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.MediaController;
+import android.widget.Toast;
+import android.widget.VideoView;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,15 +26,21 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static colin.personalplan.R.id.video;
+
 /**
  * Created by Colin on 20/03/2017.
  */
 
 public class Info extends AppCompatActivity {
 
-    static final int REQUEST_IMAGE_CAPTURE = 1;
-    ImageView capture;
+    static final int REQUEST_IMAGE_CAPTURE = 3;
+    static final int REQUEST_VIDEO_CAPTURE = 2;
+    ImageView picCapture;
+    ImageView vidCapture;
     ImageView display;
+    VideoView vid;
+    String name;
 
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -38,7 +49,10 @@ public class Info extends AppCompatActivity {
 
         Toolbar  toolbar = (Toolbar) findViewById(R.id.toolbar);
 
-        toolbar.setOnTouchListener(new OnSwipeTouchListener(Info.this) {
+
+
+        toolbar.setOnTouchListener(new OnSwipeTouchListener(Info.this)
+        {
             public void onSwipeRight()
             {
                 Intent intent = new Intent(Info.this, Video.class);
@@ -47,36 +61,96 @@ public class Info extends AppCompatActivity {
             }
             public void onSwipeLeft()
             {
-                Intent intent = new Intent(Info.this, Video.class);
-                intent.putExtra("r", "https://player.vimeo.com/video/210621803");
-                startActivity(intent);
-            }
+                new AlertDialog.Builder(Info.this)
+                        .setTitle("Change picture")
+                        .setMessage("Are you sure you want to change the icon?")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                name = "0.jpg";
+                                dispatchTakePictureIntent();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_menu_camera)
+                        .show();
 
+            }
         });
 
-        capture = (ImageView) findViewById(R.id.photo);
-        capture.setOnClickListener(new View.OnClickListener() {
+        toolbar.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v)
+            {
+                new AlertDialog.Builder(Info.this)
+                        .setTitle("Change picture")
+                        .setMessage("Are you sure you want to change the icon?")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                name = "0.jpg";
+                                dispatchTakePictureIntent();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_menu_camera)
+                        .show();
+                return true;
+            }
+        });
+
+
+        picCapture = (ImageView) findViewById(R.id.photo);
+        picCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
+                name = "infopic.jpg";
                 dispatchTakePictureIntent();
             }
         });
 
         display = (ImageView) findViewById(R.id.camera);
         String path = "/data/user/0/colin.personalplan/app_imageDir/";
-        String name = "profile.jpg";
         try
         {
-            File f = new File(path, name);
-            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            display.setImageBitmap(b);
+
+                File f = new File(path, "infopic.jpg");
+                Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+                display.setImageBitmap(b);
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
 
+        vidCapture = (ImageView) findViewById(R.id.videocamera);
+        vidCapture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                name = "infovid.mp4";
+                dispatchTakeVideoIntent();
+            }
+        });
+
+        vid = (VideoView) findViewById(video);
+
+        String url = "/data/user/0/colin.personalplan/app_imageDir/infovid.mp4";
+        Uri uri = Uri.parse(url); //Declare your url here.
+
+        vid.setMediaController(new MediaController(this));
+        vid.setVideoURI(uri);
+        vid.requestFocus();
+        vid.start();
     }
 
     public void dispatchTakePictureIntent()
@@ -88,13 +162,30 @@ public class Info extends AppCompatActivity {
 
     }
 
+    private void dispatchTakeVideoIntent() {
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(takeVideoIntent, REQUEST_VIDEO_CAPTURE);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             saveToInternalStorage(imageBitmap);
-            display.setImageBitmap(imageBitmap);
+            if(name == "infopic.jpg")
+            {
+                display.setImageBitmap(imageBitmap);
+
+            }//end if
+        }
+
+        if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
+            Uri videoUri = data.getData();
+            vid.setVideoURI(videoUri);
+            saveVideo(videoUri);
         }
     }
 
@@ -106,7 +197,6 @@ public class Info extends AppCompatActivity {
         //make the file name album + artwork, lowercase with no spaces.
         //String name = "profile.jpg";
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String name = timeStamp + ".jpg";
 
         File mypath = new File(directory,name);
 
@@ -134,4 +224,32 @@ public class Info extends AppCompatActivity {
 
         return directory.getAbsolutePath();
     }
+
+    protected void saveVideo(final Uri uriVideo){
+
+        boolean success = false;
+        ContextWrapper cw = new ContextWrapper(getApplicationContext());
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        // make the directory
+        File mypath = new File(directory,name);
+
+
+        try {
+            mypath.createNewFile();
+            success = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (success) {
+            Toast.makeText(getApplicationContext(), "Video saved!",
+                    Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(),
+                    "Error during video saving", Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+
 }

@@ -71,7 +71,7 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
         }
         if(position == 1)
         {
-            Intent intent = new Intent(Categories.this, Dreams.class);
+            Intent intent = new Intent(Categories.this, Implementation.class);
             startActivity(intent);
         }
         if(position == 2)
@@ -99,4 +99,12 @@ public class Categories extends ListActivity implements TextToSpeech.OnInitListe
         tts.setLanguage(Locale.US);
         tts.speak(titles[position], TextToSpeech.QUEUE_ADD, null);
     }
+
+    @Override
+    protected void onResume() {
+
+        super.onResume();
+        this.onCreate(null);
+    }
+
 }
