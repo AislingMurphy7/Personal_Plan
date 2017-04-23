@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -14,7 +16,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -26,10 +27,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static colin.personalplan.R.id.video;
-
 /**
  * Created by Colin on 20/03/2017.
+ *
+ * Video recording has been adapted from https://github.com/codepath/android_guides/wiki/Video-Playback-and-Recording
  */
 
 public class Implementation extends AppCompatActivity {
@@ -38,9 +39,14 @@ public class Implementation extends AppCompatActivity {
     static final int REQUEST_VIDEO_CAPTURE = 2;
     ImageView picCapture;
     ImageView vidCapture;
-    ImageView display;
+    ImageView micCapture;
+    ImageView picDisplay;
+    ImageView vidDisplay;
+    ImageView micDisplay;
     VideoView vid;
     String name;
+    private static final int VIDEO_CAPTURE = 101;
+    Uri videoUri;
 
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -55,7 +61,7 @@ public class Implementation extends AppCompatActivity {
         {
             public void onSwipeRight()
             {
-                Intent intent = new Intent(Implementation.this, Video.class);
+                Intent intent = new Intent(Implementation.this, WebVideo.class);
                 intent.putExtra("r", "https://player.vimeo.com/video/210621803");
                 startActivity(intent);
             }
@@ -92,7 +98,7 @@ public class Implementation extends AppCompatActivity {
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which)
                             {
-                                name = "0.jpg";
+                                name = "4.jpg";
                                 dispatchTakePictureIntent();
                             }
                         })
@@ -113,45 +119,83 @@ public class Implementation extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                name = "imppic.jpg";
+                name = "implpic.jpg";
                 dispatchTakePictureIntent();
             }
         });
 
-        display = (ImageView) findViewById(R.id.camera);
+        picDisplay = (ImageView) findViewById(R.id.camera);
         String path = "/data/user/0/colin.personalplan/app_imageDir/";
         try
         {
 
-            File f = new File(path, "imppic.jpg");
+            File f = new File(path, "implpic.jpg");
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            display.setImageBitmap(b);
+            picDisplay.setImageBitmap(b);
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
 
+
+        picDisplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Implementation.this, DisplayImage.class);
+                intent.putExtra("r", "implpic.jpg");
+                startActivity(intent);
+            }
+        });
+
         vidCapture = (ImageView) findViewById(R.id.videocamera);
         vidCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
-                name = "infovid.mp4";
-                dispatchTakeVideoIntent();
+                name = "implvid.mp4";
+                startRecordingVideo();
             }
         });
 
-        vid = (VideoView) findViewById(video);
+        vidDisplay = (ImageView) findViewById(R.id.video);
+        try
+        {
 
-        String url = "/data/user/0/colin.personalplan/app_imageDir/infovid.mp4";
-        Uri uri = Uri.parse(url); //Declare your url here.
+            File f = new File(path, "implopic.jpg");
+            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+            picDisplay.setImageBitmap(b);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
 
-        vid.setMediaController(new MediaController(this));
-        vid.setVideoURI(uri);
-        vid.requestFocus();
-        vid.start();
-    }
+
+        vidDisplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Implementation.this, DisplayVideo.class);
+                intent.putExtra("r", "implvid.mp4");
+                startActivity(intent);
+            }
+        });
+        String vidpath = "/data/user/0/colin.personalplan/app_imageDir/infovid.mp4";
+        Bitmap thumb = ThumbnailUtils.createVideoThumbnail(path, MediaStore.Images.Thumbnails.MINI_KIND);
+        vidDisplay.setImageBitmap(thumb);
+
+        micCapture = (ImageView) findViewById(R.id.microphone);
+
+        micDisplay = (ImageView) findViewById(R.id.mic);
+
+        micCapture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Implementation.this, RecordAudio.class);
+                startActivity(intent);
+            }
+        });
+    }//end oncreate
 
     public void dispatchTakePictureIntent()
     {
@@ -161,11 +205,17 @@ public class Implementation extends AppCompatActivity {
         }
 
     }
-
-    private void dispatchTakeVideoIntent() {
-        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takeVideoIntent, REQUEST_VIDEO_CAPTURE);
+    public void startRecordingVideo() {
+        if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FRONT)) {
+            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+            File mediaFile = new File("/data/user/0/colin.personalplan/app_imageDir/" + "implvid.mp4");
+            videoUri = Uri.fromFile(mediaFile);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, videoUri);
+            startActivityForResult(intent, VIDEO_CAPTURE);
+        }
+        else
+        {
+            Toast.makeText(this, "No camera on device", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -175,27 +225,35 @@ public class Implementation extends AppCompatActivity {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             saveToInternalStorage(imageBitmap);
-            if(name == "imppic.jpg")
+            if(name == "implpic.jpg")
             {
-                display.setImageBitmap(imageBitmap);
+                picDisplay.setImageBitmap(imageBitmap);
 
             }//end if
         }
+        if (requestCode == VIDEO_CAPTURE) {
+            if (resultCode == RESULT_OK) {
+                Toast.makeText(this, "Video has been saved ", Toast.LENGTH_LONG).show();
+                //playbackRecordedVideo();
 
-        if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
-            Uri videoUri = data.getData();
-            vid.setVideoURI(videoUri);
-            saveVideo(videoUri);
+                String path = "/data/user/0/colin.personalplan/app_imageDir/";
+                String video = "implvid.mp4";
+
+
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "Video recording cancelled.",  Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(this, "Failed to record video",  Toast.LENGTH_LONG).show();
+            }
         }
     }
+
 
     private String saveToInternalStorage(Bitmap bitmapImage)
     {
         ContextWrapper cw = new ContextWrapper(getApplicationContext());
         File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
 
-        //make the file name album + artwork, lowercase with no spaces.
-        //String name = "profile.jpg";
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 
         File mypath = new File(directory,name);
@@ -225,29 +283,5 @@ public class Implementation extends AppCompatActivity {
         return directory.getAbsolutePath();
     }
 
-    protected void saveVideo(final Uri uriVideo){
 
-        boolean success = false;
-        ContextWrapper cw = new ContextWrapper(getApplicationContext());
-        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
-        // make the directory
-        File mypath = new File(directory,name);
-
-
-        try {
-            mypath.createNewFile();
-            success = true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (success) {
-            Toast.makeText(getApplicationContext(), "Video saved!",
-                    Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(),
-                    "Error during video saving", Toast.LENGTH_LONG).show();
-        }
-
-    }
 }

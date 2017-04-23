@@ -9,7 +9,7 @@ import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
 import android.widget.Toast;
 
-public class Video extends Activity {
+public class WebVideo extends Activity {
 
     WebView web;
     //String r;
